@@ -4,8 +4,51 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>ArtVerse - Comunidade de Desenho</title>
+
 <!-- Google Identity Services SDK -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<!-- FIREBASE SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc, doc, updateDoc, arrayUnion, arrayRemove, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+  
+  const firebaseConfig = {
+    apiKey: "AIzaSyC7ArqqluxyOJ_Thnq0HpoPOyvpga8vfmg",
+    authDomain: "artverse-657ee.firebaseapp.com",
+    projectId: "artverse-657ee",
+    storageBucket: "artverse-657ee.firebasestorage.app",
+    messagingSenderId: "49508143881",
+    appId: "1:49508143881:web:d47bfae596c031ce40f9d8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+  
+  console.log("✅ Firebase conectado!");
+  
+  window.db = db;
+  window.storage = storage;
+  window.collection = collection;
+  window.addDoc = addDoc;
+  window.onSnapshot = onSnapshot;
+  window.query = query;
+  window.orderBy = orderBy;
+  window.getDocs = getDocs;
+  window.deleteDoc = deleteDoc;
+  window.doc = doc;
+  window.updateDoc = updateDoc;
+  window.arrayUnion = arrayUnion;
+  window.arrayRemove = arrayRemove;
+  window.setDoc = setDoc;
+  window.getDoc = getDoc;
+  window.ref = ref;
+  window.uploadString = uploadString;
+  window.getDownloadURL = getDownloadURL;
+</script>
+
 <style>
 * {
     margin: 0;
@@ -57,7 +100,7 @@ body {
     transition: background 0.3s ease, color 0.2s ease;
 }
 
-/* Animação do arco-íris para a tag DONO */
+/* Animação da tag DONO (arco-íris) */
 @keyframes rainbow {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -78,6 +121,28 @@ body {
     vertical-align: middle;
     text-shadow: 0 0 2px rgba(0,0,0,0.5);
     box-shadow: 0 0 8px rgba(255,255,255,0.3);
+}
+
+/* Animação da tag ADMIN (preto para cinza) */
+@keyframes grayPulse {
+    0% { background-color: #1a1a1a; color: #ffffff; }
+    50% { background-color: #4a4a4a; color: #f0f0f0; }
+    100% { background-color: #1a1a1a; color: #ffffff; }
+}
+
+.admin-tag {
+    display: inline-block;
+    background-color: #1a1a1a;
+    color: white;
+    font-weight: bold;
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 30px;
+    margin-left: 8px;
+    vertical-align: middle;
+    text-shadow: 0 0 2px rgba(0,0,0,0.5);
+    box-shadow: 0 0 5px rgba(100,100,100,0.3);
+    animation: grayPulse 2s ease-in-out infinite;
 }
 
 .nav {
@@ -195,6 +260,70 @@ h2 { font-size: 1.8rem; margin-bottom: 24px; background: linear-gradient(135deg,
 .dev-badge { position: fixed; bottom: 20px; left: 20px; background: rgba(0,0,0,0.5); padding: 6px 14px; border-radius: 30px; font-size: 0.7rem; z-index: 200; }
 .toast-msg { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #1f2a3e; padding: 10px 24px; border-radius: 50px; z-index: 300; animation: fadeOut 2.5s forwards; }
 @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+
+.search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+.search-box input { flex: 1; padding: 12px; border-radius: 40px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-primary); }
+.search-box button { background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 40px; cursor: pointer; }
+.topics { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+.topic-btn { background: var(--card-bg); padding: 8px 20px; border-radius: 40px; cursor: pointer; transition: 0.2s; }
+.topic-btn:hover { background: var(--accent); transform: scale(1.05); }
+.search-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+
+/* Estilo do painel do dono */
+.owner-panel {
+    background: rgba(0,0,0,0.3);
+    border-radius: 16px;
+    padding: 15px;
+    margin-top: 15px;
+}
+.owner-user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid var(--card-border);
+}
+.owner-user-email {
+    font-size: 0.8rem;
+    word-break: break-all;
+}
+.btn-give-admin, .btn-remove-admin {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+.btn-give-admin {
+    background: #10b981;
+    color: white;
+}
+.btn-remove-admin {
+    background: #ef4444;
+    color: white;
+}
+.add-admin-input {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+.add-admin-input input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+.add-admin-input button {
+    background: var(--accent);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: white;
+    cursor: pointer;
+}
 </style>
 </head>
 <body>
@@ -223,14 +352,29 @@ h2 { font-size: 1.8rem; margin-bottom: 24px; background: linear-gradient(135deg,
 </div>
 
 <div id="galeria" class="tab active"><h2>✨ Galeria</h2><div id="gallery" class="gallery"></div></div>
-<div id="pesquisa" class="tab"><h2>🔍 Explorar</h2><div class="search-box"><input type="text" id="searchInput" placeholder="Pesquisar..."><button class="btn" onclick="pesquisarDesenhos()">Buscar</button></div><div class="topics"><div class="topic-btn" onclick="buscarPorTopico('Anime')">✨ Anime</div><div class="topic-btn" onclick="buscarPorTopico('Cartoon')">🎭 Cartoon</div><div class="topic-btn" onclick="buscarPorTopico('Realista')">🎨 Realista</div><div class="topic-btn" onclick="buscarPorTopico('Paisagem')">🏔️ Paisagem</div><div class="topic-btn" onclick="buscarPorTopico('Fantasia')">🐉 Fantasia</div></div><div id="resultadosPesquisa" class="search-results"></div></div>
+
+<div id="pesquisa" class="tab">
+    <h2>🔍 Explorar</h2>
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Pesquisar por título, autor ou categoria...">
+        <button onclick="pesquisarDesenhos()">Buscar</button>
+    </div>
+    <div class="topics">
+        <div class="topic-btn" onclick="buscarPorTopico('Anime')">✨ Anime</div>
+        <div class="topic-btn" onclick="buscarPorTopico('Cartoon')">🎭 Cartoon</div>
+        <div class="topic-btn" onclick="buscarPorTopico('Realista')">🎨 Realista</div>
+        <div class="topic-btn" onclick="buscarPorTopico('Paisagem')">🏔️ Paisagem</div>
+        <div class="topic-btn" onclick="buscarPorTopico('Fantasia')">🐉 Fantasia</div>
+    </div>
+    <div id="resultadosPesquisa" class="search-results"></div>
+</div>
 
 <div id="postar" class="tab">
     <h2>✍️ Compartilhar Arte</h2>
     <div style="background:var(--card-bg); border-radius:32px; padding:28px;">
         <div class="upload-area" onclick="document.getElementById('uploadImage').click()" style="border:2px dashed var(--accent); border-radius:28px; padding:30px; text-align:center; cursor:pointer; margin-bottom:20px;">
             <span style="font-size:48px;">📸</span>
-            <p style="font-weight:600;">Adicionar foto</p>
+            <p style="font-weight:600;">Clique para adicionar foto</p>
         </div>
         <input type="file" id="uploadImage" accept="image/*" style="display:none;">
         <textarea id="descricaoPost" rows="3" placeholder="Descrição do desenho..." style="width:100%; padding:14px; border-radius:20px; border:1px solid var(--input-border); background:var(--input-bg); color:var(--text-primary); margin-bottom:16px;"></textarea>
@@ -242,22 +386,24 @@ h2 { font-size: 1.8rem; margin-bottom: 24px; background: linear-gradient(135deg,
             <option value="Paisagem">🏔️ Paisagem</option>
             <option value="Fantasia">🐉 Fantasia</option>
         </select>
-        <button class="btn" onclick="publicarDesenho()" style="width:100%;">🚀 Publicar</button>
+        <button class="btn" onclick="publicarDesenho()" style="width:100%; background:var(--accent); color:white; padding:14px; border-radius:40px; border:none; cursor:pointer; font-weight:600;">🚀 Publicar</button>
     </div>
 </div>
 
 <div id="zoomModal" class="modal-zoom" onclick="closeZoom()"><span class="close-zoom">&times;</span><img id="zoomImage" src=""></div>
 <div class="support-btn" onclick="abrirSuporte()">🆘 Suporte & Denúncias</div>
-<div class="dev-badge">🚧 App em desenvolvimento</div>
+<div class="dev-badge">🚀 ArtVerse - Rede Social de Desenhos</div>
 
 <script>
-// ====================== DADOS ======================
+// ====================== CONFIGURAÇÕES ======================
 let desenhosDB = [];
 let currentUser = null;
 let usersDB = [];
 let followRelations = [];
 let denunciasDB = [];
 let reportsDB = [];
+let postsUnsubscribe = null;
+let adminList = []; // Lista de emails que são admins
 
 const STORAGE_KEY = "artverse_desenhos_final";
 const USERS_KEY = "artverse_users";
@@ -265,28 +411,176 @@ const FOLLOWS_KEY = "artverse_follows";
 const USER_KEY = "artverse_user_session";
 const DENUNCIAS_KEY = "artverse_denuncias";
 const REPORTS_KEY = "artverse_reports";
-const ADMIN_EMAIL = "natanaelsantanasantos75@gmail.com";
-const ADMIN_PASSWORD = "25122008";
+const ADMIN_LIST_KEY = "artverse_admins";
 
-// Garantir que o admin exista no banco de usuários com a senha correta
-function garantirAdmin() {
-    let adminExists = usersDB.find(u => u.email === ADMIN_EMAIL);
-    if (!adminExists) {
-        usersDB.push({
-            email: ADMIN_EMAIL,
-            name: "ArtVerse Creator",
-            bio: "🎨 Criador do ArtVerse | Desenvolvedor",
-            avatar: null,
-            followers: [],
-            following: [],
-            posts: [],
-            password: ADMIN_PASSWORD
-        });
-        saveUsers();
-    } else if (adminExists.password !== ADMIN_PASSWORD) {
-        adminExists.password = ADMIN_PASSWORD;
-        saveUsers();
+// DONO ORIGINAL (só ele pode dar/remover admin)
+const OWNER_EMAIL = "natanaelsantanasantos75@gmail.com";
+// ADMINS FIXOS (já incluídos)
+const DEFAULT_ADMINS = ["natanaelsantanasantos75@gmail.com", "edufer779@gmail.com"];
+
+// ====================== FUNÇÕES DE ADMIN ======================
+function carregarAdminList() {
+    const stored = localStorage.getItem(ADMIN_LIST_KEY);
+    if(stored) {
+        adminList = JSON.parse(stored);
+    } else {
+        adminList = [...DEFAULT_ADMINS];
+        saveAdminList();
     }
+}
+
+function saveAdminList() {
+    localStorage.setItem(ADMIN_LIST_KEY, JSON.stringify(adminList));
+}
+
+function isOwner() {
+    return currentUser && currentUser.email === OWNER_EMAIL;
+}
+
+function isAdmin() {
+    return currentUser && adminList.includes(currentUser.email);
+}
+
+function getAdminTag() {
+    if (currentUser && currentUser.email === OWNER_EMAIL) {
+        return '<span class="owner-tag">🌟 DONO 🌟</span>';
+    } else if (currentUser && adminList.includes(currentUser.email)) {
+        return '<span class="admin-tag">🛡️ ADMIN 🛡️</span>';
+    }
+    return '';
+}
+
+function getUserTagByEmail(email) {
+    if (email === OWNER_EMAIL) {
+        return '<span class="owner-tag" style="font-size:0.6rem; margin-left:5px;">👑 DONO</span>';
+    } else if (adminList.includes(email)) {
+        return '<span class="admin-tag" style="font-size:0.6rem; margin-left:5px;">🛡️ ADMIN</span>';
+    }
+    return '';
+}
+
+// Dar admin para um usuário (apenas dono)
+function darAdmin(email) {
+    if (!isOwner()) {
+        showToast("❌ Apenas o DONO pode dar admin!");
+        return false;
+    }
+    if (!adminList.includes(email)) {
+        adminList.push(email);
+        saveAdminList();
+        showToast(`✅ ${email} agora é ADMIN!`);
+        renderizarPerfilMenu();
+        return true;
+    } else {
+        showToast(`⚠️ ${email} já é admin`);
+        return false;
+    }
+}
+
+// Remover admin (apenas dono)
+function removerAdmin(email) {
+    if (!isOwner()) {
+        showToast("❌ Apenas o DONO pode remover admin!");
+        return false;
+    }
+    if (email === OWNER_EMAIL) {
+        showToast("❌ Não é possível remover o DONO!");
+        return false;
+    }
+    const index = adminList.indexOf(email);
+    if (index > -1) {
+        adminList.splice(index, 1);
+        saveAdminList();
+        showToast(`⚠️ ${email} não é mais admin`);
+        renderizarPerfilMenu();
+        return true;
+    } else {
+        showToast(`⚠️ ${email} não é admin`);
+        return false;
+    }
+}
+
+// ====================== FIREBASE FUNCTIONS ======================
+async function carregarPostsFirebase() {
+    if (postsUnsubscribe) postsUnsubscribe();
+    
+    const q = query(collection(window.db, "posts"), orderBy("timestamp", "desc"));
+    postsUnsubscribe = onSnapshot(q, (snapshot) => {
+        desenhosDB = [];
+        snapshot.forEach((doc) => {
+            desenhosDB.push({ id: doc.id, ...doc.data() });
+        });
+        renderGallery();
+        if (document.getElementById("galeria").classList.contains("active")) {
+            renderGallery();
+        }
+        console.log("📸 Posts atualizados em tempo real:", desenhosDB.length);
+    });
+}
+
+async function salvarPostFirebase(post) {
+    try {
+        const docRef = await addDoc(collection(window.db, "posts"), post);
+        console.log("Post salvo no Firebase com ID:", docRef.id);
+        return docRef.id;
+    } catch (error) {
+        console.error("Erro ao salvar post:", error);
+        showToast("Erro ao publicar. Tente novamente.");
+        return null;
+    }
+}
+
+async function deletarPostFirebase(postId) {
+    try {
+        await deleteDoc(doc(window.db, "posts", postId));
+        console.log("Post deletado:", postId);
+        showToast("Post excluído!");
+    } catch (error) {
+        console.error("Erro ao deletar:", error);
+    }
+}
+
+async function likePostFirebase(postId, userEmail) {
+    const postRef = doc(window.db, "posts", postId);
+    const post = desenhosDB.find(p => p.id === postId);
+    if (post && post.likedBy && post.likedBy.includes(userEmail)) {
+        await updateDoc(postRef, {
+            likedBy: arrayRemove(userEmail),
+            likes: (post.likes || 1) - 1
+        });
+    } else {
+        await updateDoc(postRef, {
+            likedBy: arrayUnion(userEmail),
+            likes: (post.likes || 0) + 1
+        });
+    }
+}
+
+async function comentarPostFirebase(postId, comentario) {
+    const postRef = doc(window.db, "posts", postId);
+    const post = desenhosDB.find(p => p.id === postId);
+    const novosComentarios = [...(post.comments || []), comentario];
+    await updateDoc(postRef, { comments: novosComentarios });
+}
+
+// ====================== DADOS LOCAIS ======================
+function garantirAdminLocal() {
+    for (const adminEmail of DEFAULT_ADMINS) {
+        let adminExists = usersDB.find(u => u.email === adminEmail);
+        if (!adminExists) {
+            usersDB.push({
+                email: adminEmail,
+                name: adminEmail === OWNER_EMAIL ? "ArtVerse Creator" : "ArtVerse Admin",
+                bio: adminEmail === OWNER_EMAIL ? "🎨 Criador do ArtVerse | Desenvolvedor" : "🛡️ Administrador do ArtVerse",
+                avatar: null,
+                followers: [],
+                following: [],
+                posts: [],
+                password: adminEmail === OWNER_EMAIL ? "25122008" : "admin123"
+            });
+        }
+    }
+    saveUsers();
 }
 
 function loadData() {
@@ -298,7 +592,8 @@ function loadData() {
     if(storedUsers) usersDB = JSON.parse(storedUsers);
     else usersDB = [];
     
-    garantirAdmin();
+    carregarAdminList();
+    garantirAdminLocal();
     
     const storedFollows = localStorage.getItem(FOLLOWS_KEY);
     if(storedFollows) followRelations = JSON.parse(storedFollows);
@@ -319,9 +614,10 @@ function loadData() {
         updateUserStats();
     }
     
-    renderGallery();
+    carregarPostsFirebase();
     renderizarPerfilMenu();
 }
+
 function saveToLocal() { localStorage.setItem(STORAGE_KEY, JSON.stringify(desenhosDB)); }
 function saveUsers() { localStorage.setItem(USERS_KEY, JSON.stringify(usersDB)); }
 function saveFollows() { localStorage.setItem(FOLLOWS_KEY, JSON.stringify(followRelations)); }
@@ -347,18 +643,6 @@ function updateUserStats() {
         user.following = followRelations.filter(f => f.followerEmail === currentUser.email).map(f => f.followingEmail);
         saveUsers();
     }
-}
-
-function isAdmin() {
-    return currentUser && currentUser.email === ADMIN_EMAIL;
-}
-
-// ====================== TAG DONO (sem exibir email) ======================
-function getOwnerTag() {
-    if (currentUser && currentUser.email === ADMIN_EMAIL) {
-        return '<span class="owner-tag">🌟 DONO 🌟</span>';
-    }
-    return '';
 }
 
 // ====================== TEMA ======================
@@ -434,7 +718,6 @@ function fazerLogin() {
         localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
         updateUserStats();
         renderizarPerfilMenu();
-        renderGallery();
         showToast(`✅ Bem-vindo, ${user.name}!`);
     } else {
         showToast("❌ Email ou senha incorretos");
@@ -457,7 +740,6 @@ function criarConta() {
     localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
     updateUserStats();
     renderizarPerfilMenu();
-    renderGallery();
     showToast(`✅ Conta criada! Bem-vindo, ${name}!`);
 }
 
@@ -486,7 +768,6 @@ function initGoogleAuth() {
                     localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
                     updateUserStats();
                     renderizarPerfilMenu();
-                    renderGallery();
                     showToast(`✅ Conectado como ${currentUser.name}`);
                 }
             },
@@ -512,7 +793,7 @@ function renderizarPerfilMenu() {
     const postCount = user.posts.length;
     const followerCount = user.followers.length;
     const followingCount = user.following.length;
-    const ownerTag = getOwnerTag();
+    const userTag = getAdminTag();
     
     let adminPanelHtml = '';
     if(isAdmin()) {
@@ -531,6 +812,23 @@ function renderizarPerfilMenu() {
         setTimeout(() => renderizarAdminPanel(), 100);
     }
     
+    // Painel do Dono (apenas para o dono original)
+    let ownerPanelHtml = '';
+    if(isOwner()) {
+        ownerPanelHtml = `
+            <div class="owner-panel">
+                <h4 style="margin-bottom: 10px;">👑 Painel do Dono - Gerenciar Admins</h4>
+                <div id="ownerAdminList"></div>
+                <div class="add-admin-input">
+                    <input type="email" id="newAdminEmail" placeholder="Email do novo admin">
+                    <button onclick="adicionarAdminPorEmail()">➕ Dar Admin</button>
+                </div>
+                <p style="font-size:0.7rem; margin-top:10px; opacity:0.6;">* Admins têm acesso ao painel de moderação</p>
+            </div>
+        `;
+        setTimeout(() => renderizarOwnerPanel(), 100);
+    }
+    
     container.innerHTML = `
         <div class="profile-header">
             <div style="position:relative;">
@@ -538,7 +836,7 @@ function renderizarPerfilMenu() {
                 <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="atualizarAvatar(this)">
             </div>
             <div class="profile-name">
-                ${user.name} ${ownerTag}
+                ${user.name} ${userTag}
             </div>
             <div class="profile-bio">${user.bio}</div>
             <button class="follow-btn" onclick="logoutUser()" style="background:#dc2626;">🚪 Sair</button>
@@ -550,7 +848,39 @@ function renderizarPerfilMenu() {
         </div>
         <div id="userPostsArea" style="padding:20px; display:none;"></div>
         ${adminPanelHtml}
+        ${ownerPanelHtml}
     `;
+}
+
+function renderizarOwnerPanel() {
+    if(!isOwner()) return;
+    
+    const container = document.getElementById("ownerAdminList");
+    if(!container) return;
+    
+    const nonOwnerAdmins = adminList.filter(email => email !== OWNER_EMAIL);
+    
+    container.innerHTML = `
+        <div style="max-height: 200px; overflow-y: auto;">
+            ${nonOwnerAdmins.map(email => `
+                <div class="owner-user-item">
+                    <span class="owner-user-email">📧 ${email}</span>
+                    <button class="btn-remove-admin" onclick="removerAdmin('${email}')">❌ Remover Admin</button>
+                </div>
+            `).join('') || '<p style="text-align:center; padding:10px;">Nenhum admin adicional</p>'}
+        </div>
+    `;
+}
+
+function adicionarAdminPorEmail() {
+    const email = document.getElementById("newAdminEmail")?.value.trim();
+    if(!email) {
+        showToast("Digite um email válido");
+        return;
+    }
+    darAdmin(email);
+    document.getElementById("newAdminEmail").value = "";
+    renderizarOwnerPanel();
 }
 
 function renderizarAdminPanel() {
@@ -602,7 +932,7 @@ function renderizarAdminPanel() {
                 ${desenhosDB.map(post => `
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid var(--card-border);">
                         <div><strong>${post.autor}</strong>: ${post.descricao.substring(0,50)}</div>
-                        <button class="admin-delete" onclick="excluirPostAdmin(${post.id})">🗑️ Excluir</button>
+                        <button class="admin-delete" onclick="excluirPostAdmin('${post.id}')">🗑️ Excluir</button>
                     </div>
                 `).join('') || '<p>Nenhum post</p>'}
             </div>
@@ -639,11 +969,11 @@ function resolverReport(id) {
 }
 
 function excluirPostAdmin(postId) {
+    deletarPostFirebase(postId);
     desenhosDB = desenhosDB.filter(p => p.id !== postId);
     saveToLocal();
     renderGallery();
     renderizarPerfilMenu();
-    showToast("Post excluído");
 }
 
 function excluirPostDenunciado(postId) {
@@ -719,7 +1049,6 @@ function mostrarMeusPosts() {
 function mostrarSeguidores() {
     const area = document.getElementById("userPostsArea");
     let user = usersDB.find(u => u.email === currentUser.email);
-    // Não exibir emails dos seguidores publicamente
     area.innerHTML = user.followers.length ? `<p>${user.followers.length} seguidor(es)</p><div style="font-size:0.7rem; opacity:0.6;">*emails ocultos por privacidade</div>` : "<p>Nenhum seguidor</p>";
     area.style.display = "block";
 }
@@ -756,12 +1085,11 @@ function logoutUser() {
     localStorage.removeItem(USER_KEY);
     currentUser = null;
     renderizarPerfilMenu();
-    renderGallery();
     showToast("Desconectado");
 }
 
 // ====================== POSTAGEM ======================
-function publicarDesenho() {
+async function publicarDesenho() {
     if(!currentUser) { showToast("Faça login primeiro!"); toggleSidebar(); return; }
     let file = document.getElementById("uploadImage").files[0];
     let desc = document.getElementById("descricaoPost").value.trim();
@@ -769,76 +1097,91 @@ function publicarDesenho() {
     if(!file) { showToast("Adicione uma foto"); return; }
     if(!desc) { showToast("Adicione uma descrição"); return; }
     if(!categoria) { showToast("Selecione uma categoria"); return; }
+    
+    showToast("📤 Publicando...");
+    
     let reader = new FileReader();
-    reader.onload = e => {
-        let novo = { id: Date.now(), imageData: e.target.result, descricao: desc, categoria: categoria, autor: currentUser.name, autorEmail: currentUser.email, likes: 0, likedBy: [], comments: [], timestamp: new Date().toISOString() };
-        desenhosDB.unshift(novo);
-        saveToLocal();
-        updateUserStats();
-        renderGallery();
+    reader.onload = async e => {
+        let novo = { 
+            imageData: e.target.result, 
+            descricao: desc, 
+            categoria: categoria, 
+            autor: currentUser.name, 
+            autorEmail: currentUser.email, 
+            likes: 0, 
+            likedBy: [], 
+            comments: [], 
+            timestamp: new Date().toISOString() 
+        };
+        
+        await salvarPostFirebase(novo);
+        
         document.getElementById("uploadImage").value = "";
         document.getElementById("descricaoPost").value = "";
         document.getElementById("categoriaPost").value = "";
-        showToast("Postado!");
+        showToast("✅ Postado com sucesso!");
         openTab('galeria');
         renderizarPerfilMenu();
     };
     reader.readAsDataURL(file);
 }
 
-function toggleLike(id) {
+async function toggleLike(id) {
     if(!currentUser) { showToast("Login necessário"); return; }
-    let post = desenhosDB.find(p => p.id == id);
-    if(post.likedBy.includes(currentUser.email)) post.likedBy = post.likedBy.filter(e => e !== currentUser.email);
-    else post.likedBy.push(currentUser.email);
-    post.likes = post.likedBy.length;
-    saveToLocal();
-    renderGallery();
+    await likePostFirebase(id, currentUser.email);
 }
 
-function adicionarComentario(postId) {
+async function adicionarComentario(postId) {
     if(!currentUser) { showToast("Login necessário"); return; }
     let input = document.getElementById(`comment-input-${postId}`);
     let texto = input.value.trim();
     if(!texto) return;
-    let post = desenhosDB.find(p => p.id == postId);
-    post.comments.push({ autor: currentUser.name, autorEmail: currentUser.email, texto: texto });
-    saveToLocal();
-    renderGallery();
+    
+    let comentario = { 
+        autor: currentUser.name, 
+        autorEmail: currentUser.email, 
+        texto: texto,
+        timestamp: new Date().toISOString()
+    };
+    
+    await comentarPostFirebase(postId, comentario);
+    input.value = "";
 }
 
 function renderGallery() {
     let container = document.getElementById("gallery");
     if(!container) return;
-    if(desenhosDB.length === 0) { container.innerHTML = "<div style='text-align:center;padding:60px'>✨ Nenhum desenho ainda</div>"; return; }
+    if(desenhosDB.length === 0) { container.innerHTML = "<div style='text-align:center;padding:60px'>✨ Nenhum desenho ainda. Seja o primeiro a postar!</div>"; return; }
     container.innerHTML = "";
     desenhosDB.forEach(post => {
-        let liked = currentUser ? post.likedBy.includes(currentUser.email) : false;
+        let liked = currentUser ? (post.likedBy && post.likedBy.includes(currentUser.email)) : false;
         let isUserAdmin = isAdmin();
-        let isPostOwnerAdmin = post.autorEmail === ADMIN_EMAIL;
-        let ownerTagHtml = isPostOwnerAdmin ? '<span class="owner-tag" style="font-size:0.6rem; margin-left:5px;">👑 DONO</span>' : '';
+        let userTag = getUserTagByEmail(post.autorEmail);
         let commentsHtml = "";
-        post.comments.forEach((c, idx) => {
-            commentsHtml += `<div class="comment-item"><div class="comment-text"><span class="comment-author">${c.autor}:</span> ${c.texto}</div>
-            <div><button class="report-comment" onclick="denunciarComentarioPrompt(${post.id}, ${idx})">⚠️</button></div></div>`;
-        });
+        if(post.comments) {
+            post.comments.forEach((c, idx) => {
+                let commenterTag = getUserTagByEmail(c.autorEmail);
+                commentsHtml += `<div class="comment-item"><div class="comment-text"><span class="comment-author">${c.autor} ${commenterTag}:</span> ${c.texto}</div>
+                <div><button class="report-comment" onclick="denunciarComentarioPrompt('${post.id}', ${idx})">⚠️</button></div></div>`;
+            });
+        }
         let card = document.createElement("div");
         card.className = "post-card";
         card.innerHTML = `
             <img class="post-img" src="${post.imageData}" onclick="openZoom('${post.imageData}')">
             <div class="post-info">
                 <div class="post-user" onclick="verPerfilUsuario('${post.autorEmail}')">
-                    ✏️ ${post.autor} ${ownerTagHtml}
+                    ✏️ ${post.autor} ${userTag}
                 </div>
                 <div class="post-category">🏷️ ${post.categoria}</div>
                 <div class="post-desc">📝 ${post.descricao}</div>
                 <div class="post-stats">
-                    <button class="like-btn ${liked ? 'liked' : ''}" onclick="toggleLike(${post.id})">❤️ <span>${post.likes}</span></button>
+                    <button class="like-btn ${liked ? 'liked' : ''}" onclick="toggleLike('${post.id}')">❤️ <span>${post.likes || 0}</span></button>
                     <span>🕒 ${new Date(post.timestamp).toLocaleDateString()}</span>
-                    <button class="report-comment" onclick="denunciarPostPrompt(${post.id})">🚨 Denunciar</button>
-                    ${isUserAdmin ? `<button class="admin-delete" onclick="excluirPostAdmin(${post.id})">🗑️</button>` : ''}
+                    <button class="report-comment" onclick="denunciarPostPrompt('${post.id}')">🚨 Denunciar</button>
+                    ${isUserAdmin ? `<button class="admin-delete" onclick="excluirPostAdmin('${post.id}')">🗑️</button>` : ''}
                 </div>
-                <div class="comments-section">${commentsHtml || "<p style='font-size:0.75rem;'>Sem comentários.</p>"}<div class="add-comment"><input id="comment-input-${post.id}" placeholder="Comente..."><button onclick="adicionarComentario(${post.id})">Enviar</button></div></div>
+                <div class="comments-section">${commentsHtml || "<p style='font-size:0.75rem;'>Sem comentários.</p>"}<div class="add-comment"><input id="comment-input-${post.id}" placeholder="Comente..."><button onclick="adicionarComentario('${post.id}')">Enviar</button></div></div>
             </div>
         `;
         container.appendChild(card);
@@ -860,9 +1203,10 @@ function denunciarComentarioPrompt(postId, idx) {
 function verPerfilUsuario(email) {
     let user = usersDB.find(u => u.email === email);
     if(!user) return;
-    let isOwner = email === ADMIN_EMAIL;
-    // Não exibir o email do admin publicamente
-    alert(`👤 ${user.name}${isOwner ? ' 🌟 DONO' : ''}\n📝 ${user.bio}\n📸 Posts: ${user.posts.length}\n👥 Seguidores: ${user.followers.length}`);
+    let isOwnerUser = email === OWNER_EMAIL;
+    let isAdminUser = adminList.includes(email);
+    let tag = isOwnerUser ? " 🌟 DONO" : (isAdminUser ? " 🛡️ ADMIN" : "");
+    alert(`👤 ${user.name}${tag}\n📝 ${user.bio}\n📸 Posts: ${user.posts.length}\n👥 Seguidores: ${user.followers.length}`);
 }
 
 function abrirSuporte() {
@@ -875,15 +1219,58 @@ function abrirSuporte() {
     }
 }
 
-function pesquisarDesenhos() { let termo = document.getElementById("searchInput").value.toLowerCase(); let resultados = desenhosDB.filter(p => p.descricao.toLowerCase().includes(termo) || p.autor.toLowerCase().includes(termo) || p.categoria.toLowerCase().includes(termo)); let container = document.getElementById("resultadosPesquisa"); if(resultados.length === 0) { container.innerHTML = "<p>Nenhum resultado</p>"; return; } container.innerHTML = ""; resultados.forEach(post => { container.innerHTML += `<div class="post-card"><img class="post-img" src="${post.imageData}" onclick="openZoom('${post.imageData}')"><div class="post-info"><div class="post-category">${post.categoria}</div><div class="post-user">🎨 ${post.autor}${post.autorEmail === ADMIN_EMAIL ? '<span class="owner-tag" style="font-size:0.6rem; margin-left:5px;">👑 DONO</span>' : ''}</div><div class="post-desc">${post.descricao}</div><div>❤️ ${post.likes}</div></div></div>`; }); }
-function buscarPorTopico(t) { document.getElementById("searchInput").value = t; pesquisarDesenhos(); }
-function openZoom(src) { document.getElementById("zoomImage").src = src; document.getElementById("zoomModal").style.display = "flex"; }
-function closeZoom() { document.getElementById("zoomModal").style.display = "none"; }
-function showToast(msg) { let t = document.createElement("div"); t.className = "toast-msg"; t.innerText = msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); }
-function openTab(id) { document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active")); document.getElementById(id).classList.add("active"); if(id==="galeria") renderGallery(); if(id==="pesquisa") pesquisarDesenhos(); }
-function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); document.querySelector(".sidebar-overlay").classList.toggle("open"); }
+function pesquisarDesenhos() { 
+    let termo = document.getElementById("searchInput").value.toLowerCase(); 
+    let resultados = desenhosDB.filter(p => p.descricao.toLowerCase().includes(termo) || p.autor.toLowerCase().includes(termo) || p.categoria.toLowerCase().includes(termo)); 
+    let container = document.getElementById("resultadosPesquisa"); 
+    if(resultados.length === 0) { container.innerHTML = "<p style='text-align:center;padding:40px;'>Nenhum resultado encontrado</p>"; return; } 
+    container.innerHTML = ""; 
+    resultados.forEach(post => { 
+        let userTag = getUserTagByEmail(post.autorEmail);
+        container.innerHTML += `<div class="post-card"><img class="post-img" src="${post.imageData}" onclick="openZoom('${post.imageData}')"><div class="post-info"><div class="post-category">🏷️ ${post.categoria}</div><div class="post-user">🎨 ${post.autor} ${userTag}</div><div class="post-desc">📝 ${post.descricao}</div><div>❤️ ${post.likes || 0} curtidas</div></div></div>`; 
+    }); 
+}
 
-window.onload = () => { loadData(); initGoogleAuth(); loadTheme(); renderizarPerfilMenu(); };
+function buscarPorTopico(t) { 
+    document.getElementById("searchInput").value = t; 
+    pesquisarDesenhos(); 
+}
+
+function openZoom(src) { 
+    document.getElementById("zoomImage").src = src; 
+    document.getElementById("zoomModal").style.display = "flex"; 
+}
+
+function closeZoom() { 
+    document.getElementById("zoomModal").style.display = "none"; 
+}
+
+function showToast(msg) { 
+    let t = document.createElement("div"); 
+    t.className = "toast-msg"; 
+    t.innerText = msg; 
+    document.body.appendChild(t); 
+    setTimeout(()=>t.remove(),2500); 
+}
+
+function openTab(id) { 
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active")); 
+    document.getElementById(id).classList.add("active"); 
+    if(id==="galeria") renderGallery(); 
+    if(id==="pesquisa") pesquisarDesenhos(); 
+}
+
+function toggleSidebar() { 
+    document.getElementById("sidebar").classList.toggle("open"); 
+    document.querySelector(".sidebar-overlay").classList.toggle("open"); 
+}
+
+window.onload = () => { 
+    loadData(); 
+    initGoogleAuth(); 
+    loadTheme(); 
+    renderizarPerfilMenu(); 
+};
 </script>
 </body>
     </html>
