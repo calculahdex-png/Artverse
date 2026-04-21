@@ -274,8 +274,8 @@ function garantirAdmin() {
     if (!adminExists) {
         usersDB.push({
             email: ADMIN_EMAIL,
-            name: "Natanael Santana",
-            bio: "👑 Criador do ArtVerse | Desenvolvedor | Amante de arte",
+            name: "ArtVerse Creator",
+            bio: "🎨 Criador do ArtVerse | Desenvolvedor",
             avatar: null,
             followers: [],
             following: [],
@@ -283,11 +283,9 @@ function garantirAdmin() {
             password: ADMIN_PASSWORD
         });
         saveUsers();
-        console.log("✅ Conta admin criada permanentemente");
     } else if (adminExists.password !== ADMIN_PASSWORD) {
         adminExists.password = ADMIN_PASSWORD;
         saveUsers();
-        console.log("✅ Senha do admin atualizada");
     }
 }
 
@@ -300,7 +298,6 @@ function loadData() {
     if(storedUsers) usersDB = JSON.parse(storedUsers);
     else usersDB = [];
     
-    // Garantir que o admin existe
     garantirAdmin();
     
     const storedFollows = localStorage.getItem(FOLLOWS_KEY);
@@ -356,7 +353,7 @@ function isAdmin() {
     return currentUser && currentUser.email === ADMIN_EMAIL;
 }
 
-// ====================== TAG DONO ======================
+// ====================== TAG DONO (sem exibir email) ======================
 function getOwnerTag() {
     if (currentUser && currentUser.email === ADMIN_EMAIL) {
         return '<span class="owner-tag">🌟 DONO 🌟</span>';
@@ -402,10 +399,6 @@ function mostrarLoginAlternativo() {
                 <div class="login-switch" onclick="mostrarCriarConta()">Não tem conta? Criar conta</div>
                 <hr style="margin:15px 0;">
                 <button class="btn" onclick="tentarLoginGoogle()" style="width:100%; background:#4285F4;">🔑 Entrar com Google</button>
-            </div>
-            <div style="margin-top:15px; text-align:center; font-size:0.7rem; opacity:0.6;">
-                <p>Conta Admin: ${ADMIN_EMAIL}</p>
-                <p>Senha: ******</p>
             </div>
         </div>
     `;
@@ -726,14 +719,15 @@ function mostrarMeusPosts() {
 function mostrarSeguidores() {
     const area = document.getElementById("userPostsArea");
     let user = usersDB.find(u => u.email === currentUser.email);
-    area.innerHTML = user.followers.length ? `<div>${user.followers.map(email => `<div style="padding:8px; background:rgba(0,0,0,0.2); border-radius:12px;">👤 ${email}</div>`).join('')}</div>` : "<p>Nenhum seguidor</p>";
+    // Não exibir emails dos seguidores publicamente
+    area.innerHTML = user.followers.length ? `<p>${user.followers.length} seguidor(es)</p><div style="font-size:0.7rem; opacity:0.6;">*emails ocultos por privacidade</div>` : "<p>Nenhum seguidor</p>";
     area.style.display = "block";
 }
 
 function mostrarSeguindo() {
     const area = document.getElementById("userPostsArea");
     let user = usersDB.find(u => u.email === currentUser.email);
-    area.innerHTML = user.following.length ? `<div>${user.following.map(email => `<div style="padding:8px; background:rgba(0,0,0,0.2); border-radius:12px;">👤 ${email}</div>`).join('')}</div>` : "<p>Não segue ninguém</p>";
+    area.innerHTML = user.following.length ? `<p>${user.following.length} seguindo</p><div style="font-size:0.7rem; opacity:0.6;">*emails ocultos por privacidade</div>` : "<p>Não segue ninguém</p>";
     area.style.display = "block";
 }
 
@@ -867,6 +861,7 @@ function verPerfilUsuario(email) {
     let user = usersDB.find(u => u.email === email);
     if(!user) return;
     let isOwner = email === ADMIN_EMAIL;
+    // Não exibir o email do admin publicamente
     alert(`👤 ${user.name}${isOwner ? ' 🌟 DONO' : ''}\n📝 ${user.bio}\n📸 Posts: ${user.posts.length}\n👥 Seguidores: ${user.followers.length}`);
 }
 
@@ -891,4 +886,4 @@ function toggleSidebar() { document.getElementById("sidebar").classList.toggle("
 window.onload = () => { loadData(); initGoogleAuth(); loadTheme(); renderizarPerfilMenu(); };
 </script>
 </body>
-            </html>
+    </html>
